@@ -1,11 +1,10 @@
-const express = require('express')
-const app = express()
-const port = 3000
-
-app.get('/info', (req, res) => {
-  res.send(typeof req.params.id);
-})
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+let val = 0;
+// (async () => {
+  const y = new Promise(resolve =>{while(true);3});
+  const x = Promise.all([
+        new Promise(resolve => { let i = 0; while((i++)<100000);console.log(1);resolve(); }),
+        new Promise(resolve => { let i = 0; while((i++)<100);console.log(2); resolve(); }),
+        new Promise(resolve => { let i = 0; while((i++)<2000);console.log(3); resolve(); }),
+        ]);
+    console.log(val);
+// })();

@@ -27,7 +27,10 @@ const getCollegeProgramDetailsByRankHelper = async ({
     },
     {
       $group: {
-        _id: { Institute: '$Institute', 'Academic Program Name': '$Academic Program Name' },
+        _id: { Institute: '$Institute' },
+        programme: { $push: '$Academic Program Name' },
+        'Opening Rank': { $push: '$Opening Rank' },
+        'Closing Rank': { $push: '$Closing Rank' },
         bestOpeningRank: { $min: '$Opening Rank' },
         worstClosingRank: { $max: '$Closing Rank' },
       },
