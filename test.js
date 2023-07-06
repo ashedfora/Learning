@@ -1,10 +1,11 @@
-const redis = require('redis');
-const client = redis.createClient(6379,'127.0.0.1');
-client.on('connect', () => console.log('abcd'))
-client.on('end', () => console.log('Redis connection is closed.'));
-client.on('reconnecting', (o) => {
- console.log('Redis client is reconnecting!');
- console.log(`Attempt no. ${o.attempt}`);
- console.log(`Milliseconds since last attempt: ${o.delay}`);
-y
-});
+const express = require('express')
+const app = express()
+const port = 3000
+
+app.get('/info', (req, res) => {
+  res.send(typeof req.params.id);
+})
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
