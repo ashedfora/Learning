@@ -2,18 +2,18 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 const collegeProgrammeSchema = new Schema({
-  'Institute Code': String,
-  Institute: String,
-  'Academic Program Name':String,
-  'Branch Code': Number,
-  Quota: String,
-  'Seat Type':String,
-  Gender:String,
-  'Opening Rank':Number,
-  'Closing Rank':Number,
-  Branch:String,
-  Degree:String,
-  Duration:String,
+  instituteCode: String,
+  institute: String,
+  academicProgramName: String,
+  branchCode: Number,
+  quota: String,
+  seatType: String,
+  gender: String,
+  openingRank: Number,
+  closingRank: Number,
+  branch: String,
+  degree: String,
+  duration: String,
 
 }, { timestamps: false });
 

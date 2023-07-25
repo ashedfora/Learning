@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-
-const dbURI = 'mongodb://localhost:27017/TikTalk';
+// dotenv -> access .env file
+const dbURI = 'mongodb://localhost:27017/College';
 const mongooseConnect = () => {
   mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
 };

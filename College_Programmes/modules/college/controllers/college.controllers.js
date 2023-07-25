@@ -2,42 +2,30 @@ const {
   getCollegeProgramDetailsByRankHelper,
 } = require('../helpers/college.helpers');
 
-const [
-  DEFAULT_INSTITUTE,
-  DEFAULT_ACADEMIC_PROGRAM_NAME,
-  DEFAULT_QUOTA,
-  DEFAULT_SEAT_TYPE,
-  DEFAULT_GENDER,
-] = [
-  '',
-  '',
-  'AI',
-  'OPEN',
-  'Gender-Neutral',
-];
+const { DEFAULT_VALUES } = require('../constants/college.constants');
+
 const getCollegeProgramDetailsByRank = async (req, res) => {
   try {
     const {
-      Institute: institute = DEFAULT_INSTITUTE,
-      'Academic Program Name': academicProgramName = DEFAULT_ACADEMIC_PROGRAM_NAME,
-      Quota: quota = DEFAULT_QUOTA,
-      'Seat Type': seatType = DEFAULT_SEAT_TYPE,
-      Gender: gender = DEFAULT_GENDER,
+      institute = '',
+      academicProgramName = '',
+      quota = DEFAULT_VALUES.QUOTA,
+      seatType = DEFAULT_VALUES.SEAT_TYPE,
+      gender = DEFAULT_VALUES.GENDER,
       rank,
     } = req.body;
-    const params = {
+    const { collegeData } = await getCollegeProgramDetailsByRankHelper({
       institute,
       academicProgramName,
       quota,
       seatType,
       gender,
-      rank,
-    };
-    console.log(academicProgramName);
-    res.status(200).send(await getCollegeProgramDetailsByRankHelper(params));
-    return 1;
+      rank: Number(rank),
+    });
+    return res.status(200).send(collegeData); // successResponse
   } catch (error) {
-    return new Error('Internal Server Error');
+    console.log(error);
+    return res.send('Internal Server Error'); // errorResponse
   }
 };
 

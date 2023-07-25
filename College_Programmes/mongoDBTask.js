@@ -1,74 +1,90 @@
 const xlsx = require('xlsx');
-const CollegeProgramme = require('./programmeSchema');
-
 const mongoose = require('mongoose');
+const CollegeProgramme = require('./models/programmeSchema');
 
-const dbURI = 'mongodb://localhost:27017/TikTalk';
+const dbURI = 'mongodb://localhost:27017/College';
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const saveToDB = async () => {
   const workbook = xlsx.readFile('./jee_advanced_data.xlsx');
-  const workbook_sheet = workbook.SheetNames;
-  const round6 = xlsx.utils.sheet_to_json(workbook.Sheets[workbook_sheet[5]]);
-  for (let i = 0; i < round6.length; i++) {
+  const workbookSheet = workbook.SheetNames;
+  const round6 = xlsx.utils.sheet_to_json(workbook.Sheets[workbookSheet[5]]);
+  for (let i = 0; i < round6.length; i += 1) {
     if (typeof round6[i]['Closing Rank'] === 'string') {
       const str = round6[i]['Closing Rank'];
-      round6[i]['Closing Rank'] = Number(str.substr(0, str.length-1));
+      round6[i]['Closing Rank'] = Number(str.substr(0, str.length - 1));
     }
   }
-  for (let i = 0; i < round6.length; i++) {
+  for (let i = 0; i < round6.length; i += 1) {
     if (typeof round6[i]['Opening Rank'] === 'string') {
       const str = round6[i]['Opening Rank'];
-      round6[i]['Opening Rank'] = Number(str.substr(0, str.length-1));
+      round6[i]['Opening Rank'] = Number(str.substr(0, str.length - 1));
     }
   }
-  round6.forEach(e => new CollegeProgramme(e).save());
+  round6.forEach((e) => new CollegeProgramme({
+    quota: e.Quota,
+    instituteCode: e['Institute Code'],
+    institute: e.Institute,
+    academicProgramName: e['Academic Program Name'],
+    branchCode: e['Branch Code'],
+    seatType: e['Seat Type'],
+    gender: e.Gender,
+    openingRank: e['Opening Rank'],
+    closingRank: e['Closing Rank'],
+    branch: e.Branch,
+    degree: e.Degree,
+    duration: e.Duration,
+  }).save());
   console.log('Done Saving');
 };
 
-(async () =>{
-  // await saveToDB();
-  const sortStage = {
+(async () => {
+  await saveToDB();
+  const sortByRankStage = {
     $sort: {
-      'Opening Rank': 1,
+      openingRank: 1,
+    },
+  };
+  const groupByInstituteStage = {
+    $group: {
+      _id: '$quota',
+      bestOpeningRank: { $first: '$openingRank' },
+      worstOpeningRank: { $last: '$openingRank' },
+      entries: { $push: '$$ROOT' },
+      top1000: {
+        $push: { $cond: [{ $lte: ['$openingRank', 1000] }, '$openingRank', '$$REMOVE'] },
+      },
     },
   };
   const arr = await CollegeProgramme.aggregate([
-    { $sort: { 'Opening Rank': 1 } },
-    { $group: { _id: '$Quota', 
-                'bestOpeningRank': {$first: '$Opening Rank'},
-                'worstOpeningRank': {$last: '$Opening Rank'},
-                entries: { $push: "$$ROOT" },
-                top1000: { $push: { $cond: [{$lte: ['$Opening Rank',1000]},'$Opening Rank','$$REMOVE']}
-              }
-              } }
+    sortByRankStage,
+    groupByInstituteStage,
   ]);
   console.log(arr);
 
-const fileName = 'test.xlsx';
+  const fileName = 'test.xlsx';
 
-const wb = xlsx.utils.book_new();
-for (let i = 0; i < arr.length; i++) {
-  ws = xlsx.utils.json_to_sheet(arr[i].entries.map(e => ({
-    'Institute Code': e['Institute Code'],
-    'Institute': e['Institute'],
-    'Academic Program Name': e['Academic Program Name'],
-    'Branch Code': e['Branch Code'],
-    'Seat Type': e['Seat Type'],
-    'Gender': e['Gender'],
-    'Opening Rank': e['Opening Rank'],
-    'Closing Rank': e['Closing Rank'],
-    'Branch': e['Branch'],
-    'Degree': e['Degree'],
-    'Duration': e['Duration'],
-  })));
-  xlsx.utils.sheet_add_aoa(ws, [[arr[i]['top1000'].toString()]], { origin: "O1" });
+  const wb = xlsx.utils.book_new();
+  for (let i = 0; i < arr.length; i += 1) {
+    const ws = xlsx.utils.json_to_sheet(arr[i].entries.map((e) => ({
+      instituteCode: e.instituteCode,
+      institute: e.institute,
+      academicProgramName: e.academicProgramName,
+      branchCode: e.branchCode,
+      seatType: e.seatType,
+      gender: e.Gender,
+      openingRank: e.openingRank,
+      closingRank: e.closingRank,
+      branch: e.Branch,
+      degree: e.Degree,
+      duration: e.Duration,
+    })));
+    xlsx.utils.sheet_add_aoa(ws, [[arr[i].top1000.toString()]], { origin: 'O1' });
 
-  xlsx.utils.book_append_sheet(wb, ws, arr[i]['_id']);
-}
+    xlsx.utils.book_append_sheet(wb, ws, arr[i]._id);
+  }
 
-xlsx.writeFile(wb, fileName);
+  xlsx.writeFile(wb, fileName);
 
   console.log('End of program');
 })();
-

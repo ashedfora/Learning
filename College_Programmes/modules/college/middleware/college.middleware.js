@@ -5,12 +5,13 @@ const validateCollegeProgramDetailsParams = async (req, res, next) => {
     const {
       rank,
     } = req.body;
-    if (!Number.isInteger(Number(rank))) {
+    if (!Number.isInteger(rank)) {
       throw new Error('Invalid Rank');
     }
     return next();
   } catch (error) {
-    return res.send('Internal Server Error');
+    console.log(error);
+    return res.send('Internal Server Error'); // errorResponse
   }
 };
 

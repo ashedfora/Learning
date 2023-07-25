@@ -1,8 +1,4 @@
-const mongoose = require('mongoose');
 const CollegeProgramme = require('../../../models/programmeSchema');
-
-const dbURI = 'mongodb://localhost:27017/TikTalk';
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const getCollegeProgramDetailsByRankHelper = async ({
   institute,
@@ -12,32 +8,41 @@ const getCollegeProgramDetailsByRankHelper = async ({
   gender,
   rank,
 }) => {
-  rank = Number(rank);
-  const arr = await CollegeProgramme.aggregate([
-    {
-      $match: {
-        Institute: { $regex: institute, $options: 'si' },
-        'Academic Program Name': { $regex: academicProgramName, $options: 'si' },
-        Quota: { $regex: quota, $options: 'si' },
-        'Seat Type': { $regex: seatType, $options: 'si' },
-        Gender: { $regex: gender, $options: 'si' },
-        'Opening Rank': { $lte: rank },
-        'Closing Rank': { $gte: rank },
-      },
+  const matchStage = {
+    $match: {
+      institute: { $regex: institute, $options: 'i' },
+      academicProgramName: { $regex: academicProgramName, $options: 'i' },
+      quota,
+      seatType,
+      gender,
+      openingRank: { $lte: rank },
+      closingRank: { $gte: rank },
     },
-    {
-      $group: {
-        _id: { Institute: '$Institute' },
-        programme: { $push: '$Academic Program Name' },
-        'Opening Rank': { $push: '$Opening Rank' },
-        'Closing Rank': { $push: '$Closing Rank' },
-        bestOpeningRank: { $min: '$Opening Rank' },
-        worstClosingRank: { $max: '$Closing Rank' },
-      },
+  };
+  const sortStage = {
+    $sort: {
+      openingRank: 1,
     },
+  };
+  const groupStage = {
+    $group: {
+      _id: { Institute: '$institute' },
+      programme: { $push: '$academicProgramName' },
+      openingRank: { $push: '$openingRank' },
+      closingRank: { $push: '$closingRank' },
+      bestOpeningRank: { $min: '$openingRank' },
+      worstClosingRank: { $max: '$closingRank' },
+    },
+  };
+  // cnst { matchStage, sortStage, gr }
+  const collegeData = await CollegeProgramme.aggregate([
+    matchStage,
+    sortStage,
+    groupStage,
   ]);
-  return arr;
+  return { collegeData };
 };
+
 module.exports = {
   getCollegeProgramDetailsByRankHelper,
 };
